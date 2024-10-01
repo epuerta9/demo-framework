@@ -24,7 +24,7 @@ base_url = os.getenv('BASE_URL', 'http://localhost') + ':' + os.getenv(
                     'DAPR_HTTP_PORT', '3500')
 
 # Adding app id as part of the header
-headers = {'dapr-app-id': 'framework-1', 'content-type': 'application/json'}
+headers = {'dapr-app-id': 'kitchenai', 'content-type': 'application/json'}
 
 if args.query and args.action == "query":
     data = {

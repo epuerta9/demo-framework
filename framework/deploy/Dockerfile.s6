@@ -1,0 +1,57 @@
+# Stage 1: General enviroment
+FROM python:3.12-slim-bookworm AS python-base
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    PYSETUP_PATH="/opt/pysetup" \
+    VENV_PATH="/opt/pysetup/.venv" \
+    S6_KILL_GRACETIME=0 \
+    S6_OVERLAY_VERSION=3.1.6.2 \
+    S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
+    S6_SYNC_DISKS=1
+
+ENV PATH="$VENV_PATH/bin:$PATH"
+
+
+# Stage 2: Install dependencies & build static files
+FROM python-base as builder-base
+
+# Install dependencies
+WORKDIR $PYSETUP_PATH
+COPY ./requirements.txt ./
+RUN apt-get update && apt-get install build-essential
+
+
+RUN pip install --upgrade pip uv \
+ && python -m uv venv $VENV_PATH && uv pip install -r requirements.txt
+
+COPY . /app
+WORKDIR /app
+
+
+FROM python-base as dapr-builder
+
+RUN wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash
+
+# Install daprd
+ARG DAPR_BUILD_DIR
+COPY $DAPR_BUILD_DIR /opt/dapr
+ENV PATH="/opt/dapr/:${PATH}"
+RUN dapr init --slim
+
+# Install your app
+WORKDIR /app
+RUN pip install requests
+
+# Stage 3: Run service
+FROM python-base as production
+
+COPY --from=builder-base $VENV_PATH $VENV_PATH
+RUN apt-get update 
+
+# RUN apt install python3-pip libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libharfbuzz-subset0 libffi-dev libjpeg-dev libopenjp2-7-dev -y
+
+ENTRYPOINT ["/init"]
+# HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl -f http://0.0.0.0:8000/health

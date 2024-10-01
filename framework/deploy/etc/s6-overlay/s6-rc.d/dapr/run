@@ -1,0 +1,5 @@
+#!/command/with-contenv execlineb
+
+exec dapr run --app-id kitchenai --app-port 8001 \
+    --app-protocol http \
+    -components-path /components

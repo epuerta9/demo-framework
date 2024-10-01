@@ -11,6 +11,32 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
 
+
+  kitchenai:
+    image: kitchenai:v0
+    container_name: kitchenai
+    environment:
+      - OPENAI_API_KEY
+    networks:
+      - hello-dapr
+  
+  kitchenai-dapr:
+    image: "daprio/daprd:edge"
+    container_name: kitchenai-dapr
+    command: ["./daprd",
+      "-app-id", "kitchenai",
+      "--app-port", "8001",
+      "--app-protocol", "http",
+      "-components-path", "/components"]
+    volumes:
+      - "./components/:/components"
+    depends_on:
+      - kitchenai
+    network_mode: "service:kitchenai"
+
 volumes:
   db:
     driver: local
+
+networks:
+  hello-dapr:
