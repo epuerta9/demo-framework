@@ -54,10 +54,5 @@ RUN apt-get update
 
 # RUN apt install python3-pip libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libharfbuzz-subset0 libffi-dev libjpeg-dev libopenjp2-7-dev -y
 
-
-COPY octoiqdj /app/octoiqdj
-COPY manage.py /app/manage.py
-
-EXPOSE 8000
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/init"]
 # HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl -f http://0.0.0.0:8000/health

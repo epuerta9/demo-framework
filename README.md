@@ -11,7 +11,7 @@ https://docs.dapr.io/getting-started/install-dapr-cli/
 
 ## QuickStart
 
-        tested with: python version 3.11
+        tested with: python version 3.11+
 
 1. `make deps`
 2. run framework api `make run-framework`

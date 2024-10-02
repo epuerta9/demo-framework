@@ -5,7 +5,7 @@ import os
 import logging
 
 app = Flask(__name__)
-PERSIST_DIR = "./storage"
+PERSIST_DIR = "./framework/storage"
 app.logger.setLevel(logging.INFO)
 
 
