@@ -1,0 +1,3 @@
+
+s6-svwait -u /var/run/s6/services/dapr # This waits for the 'dapr' service 
+s6-svwait -u /var/run/s6/services/placement # This waits for the 'dapr' service 

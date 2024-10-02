@@ -1,0 +1,17 @@
+services:
+
+  kitchenai:
+    build: 
+      context: ../
+      dockerfile: docker/Dockerfile.s6
+    # image: s6
+    container_name: kitchenai-s6
+    environment:
+      - OPENAI_API_KEY
+    ports:
+      - 3501:3501
+      - 3500:3500
+      - 8001:8001
+
+networks:
+  hello-dapr:

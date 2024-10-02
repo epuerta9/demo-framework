@@ -27,5 +27,17 @@ run-client-sidecar:
 e2e:
 	docker compose -f docker/docker-compose.s2s.yml up -d 	
 
+cmd := up -d
+
+dev:
+	docker compose -f docker/docker-compose.dev.yml $(cmd)
+
+s6:
+	docker compose -f docker/docker-compose.s6.yml $(cmd) 
+
+
+build-s6:
+	docker build  -t s6 -f docker/Dockerfile.s6 .
+
 clean:
 	docker compose -f docker/docker-compose.s2s.yml down

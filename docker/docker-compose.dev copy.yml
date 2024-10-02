@@ -1,0 +1,37 @@
+services:
+
+  app-dapr:
+    image: "daprio/daprd:edge"
+    container_name: app-dapr
+    command: ["./daprd",
+      "-app-id", "app-dapr",
+      "--app-protocol", "http"]
+    networks:
+      - hello-dapr 
+    ports:
+      - 3500:3500
+
+  kitchenai:
+    build: 
+      context: ../
+      dockerfile: docker/Dockerfile.dev
+    container_name: kitchenai
+    environment:
+      - OPENAI_API_KEY
+    ports:
+      - 3501:3501
+  
+  kitchenai-dapr:
+    image: "daprio/daprd:edge"
+    container_name: kitchenai-dapr
+    command: ["./daprd",
+      "-app-id", "kitchenai",
+      "--app-port", "8001",
+      "--dapr-http-port", "3501",
+      "--app-protocol", "http"]
+    depends_on:
+      - kitchenai
+    network_mode: "service:kitchenai"
+
+networks:
+  hello-dapr:

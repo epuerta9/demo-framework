@@ -1,4 +1,4 @@
-# Stage 1: General enviroment
+# Stage 1: General environment
 FROM python:3.12-slim-bookworm AS python-base
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -14,45 +14,86 @@ ENV PYTHONUNBUFFERED=1 \
 
 ENV PATH="$VENV_PATH/bin:$PATH"
 
-
 # Stage 2: Install dependencies & build static files
-FROM python-base as builder-base
+FROM python-base AS builder-base
 
 # Install dependencies
 WORKDIR $PYSETUP_PATH
-COPY ./requirements.txt ./
-RUN apt-get update && apt-get install build-essential
 
+ARG APP_DIR=./framework
+ARG REQUIREMENTS_FILE=requirements.txt
 
-RUN pip install --upgrade pip uv \
- && python -m uv venv $VENV_PATH && uv pip install -r requirements.txt
+COPY ${APP_DIR}/${REQUIREMENTS_FILE} ./
 
-COPY . /app
-WORKDIR /app
+# Install dependencies and packages
+RUN set -ex && \
+    apt-get update && \
+    apt-get install -y build-essential xz-utils wget --no-install-recommends && \
+    pip install --upgrade pip && \
+    python -m venv $VENV_PATH && \
+    . $VENV_PATH/bin/activate && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip list
 
+# Install s6-overlay
+RUN mkdir -p /s6-install && \
+    wget -qO- https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz | tar -Jxpf - -C /s6-install && \
+    wget -qO- https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz | tar -Jxpf - -C /s6-install && \
+    ls -la /s6-install || (echo "s6-overlay installation failed" && exit 1)
 
-FROM python-base as dapr-builder
+# Install Dapr
+RUN wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash && \
+    dapr init --slim && \
+    ls -la /root/.dapr || (echo "Dapr initialization failed" && exit 1)
 
-RUN wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash
+# Stage 3: Production
+FROM python-base AS production
 
-# Install daprd
-ARG DAPR_BUILD_DIR
-COPY $DAPR_BUILD_DIR /opt/dapr
-ENV PATH="/opt/dapr/:${PATH}"
-RUN dapr init --slim
+ARG APP_DIR=./framework
 
-# Install your app
-WORKDIR /app
-RUN pip install requests
+ARG S6_APP_DIR=deploy/etc/s6-overlay
 
-# Stage 3: Run service
-FROM python-base as production
+# Copy s6-overlay
+COPY --from=builder-base /s6-install /
 
+# Copy the virtual environment
 COPY --from=builder-base $VENV_PATH $VENV_PATH
-COPY ./scripts/entrypoint.sh /app/entrypoint.sh
-RUN apt-get update 
 
-# RUN apt install python3-pip libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libharfbuzz-subset0 libffi-dev libjpeg-dev libopenjp2-7-dev -y
+# Set environment variables
+ENV VIRTUAL_ENV=$VENV_PATH
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+# Verify virtual environment
+RUN echo "Python version:" && python --version && \
+    echo "Python path:" && which python && \
+    echo "Pip path:" && which pip && \
+    echo "Virtual env path:" && echo $VIRTUAL_ENV && \
+    echo "Contents of virtual env:" && ls -la $VIRTUAL_ENV/bin
+
+RUN apt-get update && apt-get install -y net-tools
+
+# Copy Dapr
+COPY --from=builder-base /usr/local/bin/dapr /usr/local/bin/dapr
+COPY --from=builder-base /root/.dapr /root/.dapr
+
+# Verify Dapr installation
+RUN ls -la /usr/local/bin/dapr && \
+    ls -la /root/.dapr || echo "Dapr files not found"
+
+# Copy application code
+COPY ${APP_DIR} /app/kitchenai
+
+# Set up environment
+WORKDIR /app/kitchenai
+
+# Copy s6-overlay configuration
+COPY ${S6_APP_DIR} /etc/s6-overlay
+
+#if in the future we want to update the dapr config
+#RUN mv /etc/s6-overlay/config.yml /root/.dapr/config.yaml
+
+# Expose necessary ports
+EXPOSE 3500 3501 8001
+
+# Set entrypoint
 ENTRYPOINT ["/init"]
-# HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl -f http://0.0.0.0:8000/health
