@@ -14,7 +14,7 @@ def store():
     # check if storage already exists
     if not os.path.exists(PERSIST_DIR):
         # load the documents and create the index
-        documents = SimpleDirectoryReader("data").load_data()
+        documents = SimpleDirectoryReader("framework/data").load_data()
         index = VectorStoreIndex.from_documents(documents)
         # store it for later
         index.storage_context.persist(persist_dir=PERSIST_DIR)
