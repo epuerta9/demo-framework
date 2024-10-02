@@ -1,5 +1,7 @@
 #!/command/with-contenv execlineb
 
-exec dapr run --app-id kitchenai --app-port 8001 \
+exec dapr run  \
+    --app-id app \
     --app-protocol http \
-    -components-path /components
+    --scheduler-host-address "" \
+    --dapr-http-port 3500

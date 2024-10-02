@@ -1,2 +1,0 @@
-
-s6-svwait -u /var/run/s6/services/server # This waits for the 'server' service (your Python app)

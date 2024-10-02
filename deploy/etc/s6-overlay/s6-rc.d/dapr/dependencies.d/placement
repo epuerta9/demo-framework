@@ -1,0 +1,2 @@
+
+s6-svwait -u /var/run/s6/services/placement # This waits for the 'placement' service 

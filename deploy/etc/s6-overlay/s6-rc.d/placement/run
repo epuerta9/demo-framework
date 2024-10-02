@@ -1,0 +1,4 @@
+#!/command/with-contenv sh
+
+
+exec /root/.dapr/bin/placement

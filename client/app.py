@@ -20,7 +20,7 @@ parser.add_argument('--query', type=str, help="A query string to be processed")
 args = parser.parse_args()
 
 
-base_url = os.getenv('BASE_URL', 'http://localhost') + ':' + os.getenv(
+base_url = os.getenv('BASE_URL', 'http://127.0.0.1') + ':' + os.getenv(
                     'DAPR_HTTP_PORT', '3500')
 
 # Adding app id as part of the header

@@ -1,4 +1,3 @@
 #!/command/with-contenv sh
 
-cd /app
-python octoiqdj/__main__.py setup
+#setup work can happen here i.e migrations etc
