@@ -30,11 +30,10 @@ e2e:
 cmd := up -d
 
 dev:
-	docker compose -f docker/docker-compose.dev.yml $(cmd)
+	docker run -it --entrypoint /bin/bash -v $(shell pwd):/app/kitchenai -e OPENAI_API_KEY=$$OPENAI_API_KEY s6
 
 s6:
 	docker compose -f docker/docker-compose.s6.yml $(cmd) 
-
 
 build-s6:
 	docker build  -t s6 -f docker/Dockerfile.s6 .

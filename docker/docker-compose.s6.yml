@@ -4,7 +4,6 @@ services:
     build: 
       context: ../
       dockerfile: docker/Dockerfile.s6
-    # image: s6
     container_name: kitchenai-s6
     environment:
       - OPENAI_API_KEY
