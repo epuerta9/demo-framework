@@ -92,8 +92,10 @@ COPY ${S6_APP_DIR} /etc/s6-overlay
 #if in the future we want to update the dapr config
 #RUN mv /etc/s6-overlay/config.yml /root/.dapr/config.yaml
 
+COPY ${S6_APP_DIR}/scripts/dev.sh /usr/local/bin/dev
+
 # Expose necessary ports
-EXPOSE 3500 3501 8001
+EXPOSE 3500 3501 8000
 
 # Set entrypoint
 ENTRYPOINT ["/init"]

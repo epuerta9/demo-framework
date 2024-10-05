@@ -7,6 +7,6 @@ RUN cd /app && \
 
 WORKDIR /app
 
-ENTRYPOINT ["python"]
+ENTRYPOINT ["fastapi"]
 
-CMD ["app.py"]
+CMD ["run", "app.py"]

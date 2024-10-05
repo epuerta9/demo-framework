@@ -30,13 +30,16 @@ e2e:
 cmd := up -d
 
 dev:
-	docker run -it --entrypoint /bin/bash -v $(shell pwd):/app/kitchenai -e OPENAI_API_KEY=$$OPENAI_API_KEY s6
+	docker run -it --entrypoint /bin/bash -v $(shell pwd):/app/kitchenai -e OPENAI_API_KEY=$$OPENAI_API_KEY \
+	-p 8000:8000 \
+	-p 3500:3500 \
+	s6
 
 s6:
 	docker compose -f docker/docker-compose.s6.yml $(cmd) 
 
 build-s6:
-	docker build  -t s6 -f docker/Dockerfile.s6 .
+	docker build  -t s6 --no-cache -f docker/Dockerfile.s6 .
 
 clean:
 	docker compose -f docker/docker-compose.s2s.yml down

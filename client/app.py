@@ -30,10 +30,9 @@ if args.query and args.action == "query":
     data = {
         'query': args.query,
     }
-    print(data)
     # Invoking a service
     result = requests.post(
-        url='%s/query' % (base_url),
+        url='%s/default/query/query-1' % (base_url),
         data=json.dumps(data),
         headers=headers
     )
