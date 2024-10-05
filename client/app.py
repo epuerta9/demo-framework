@@ -1,49 +1,85 @@
-import logging
-import requests
-import os
-import argparse
-import json
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends
+from fastapi.responses import StreamingResponse
+from kitchenai.client import KitchenClient
+from pydantic import BaseModel
+import asyncio
 
-logging.basicConfig(level=logging.INFO)
+app = FastAPI()
 
-# Step 1: Create an ArgumentParser object
-parser = argparse.ArgumentParser(description="A script that processes positional arguments.")
+class QueryRequest(BaseModel):
+    query: str
 
-# Step 2: Add positional arguments
-# The first positional argument 'input_file'
-parser.add_argument('action', type=str, help="The input file to be processed")
+class MultiModalQueryRequest(BaseModel):
+    query: str
+    image_url: str
 
-# Optional argument (example)
-parser.add_argument('--query', type=str, help="A query string to be processed")
+def get_kitchen_client():
+    with KitchenClient(app_id="kitchenai", namespace="default") as client:
+        yield client
 
-# Step 3: Parse the arguments
-args = parser.parse_args()
+@app.post("/query")
+async def query(request: QueryRequest, client: KitchenClient = Depends(get_kitchen_client)):
+    try:
+        resp = client.query(request.query, "query-1")
+        return {"response": resp}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/streaming-query")
+async def streaming_query(request: QueryRequest, client: KitchenClient = Depends(get_kitchen_client)):
+    try:
+        resp = client.query(request.query, "streaming")
+        return StreamingResponse(resp, media_type="text/event-stream")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-base_url = os.getenv('BASE_URL', 'http://127.0.0.1') + ':' + os.getenv(
-                    'DAPR_HTTP_PORT', '3500')
+@app.post("/hybrid-search")
+async def hybrid_search(request: QueryRequest, client: KitchenClient = Depends(get_kitchen_client)):
+    try:
+        resp = client.query(request.query, "hybrid-search")
+        return {"results": resp}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-# Adding app id as part of the header
-headers = {'dapr-app-id': 'kitchenai', 'content-type': 'application/json'}
+@app.post("/multi-modal-query")
+async def multi_modal_query(request: MultiModalQueryRequest, client: KitchenClient = Depends(get_kitchen_client)):
+    try:
+        resp = client.query({"query": request.query, "image_url": request.image_url}, "multi-modal-query")
+        return {"response": resp}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-if args.query and args.action == "query":
-    data = {
-        'query': args.query,
-    }
-    # Invoking a service
-    result = requests.post(
-        url='%s/default/query/query-1' % (base_url),
-        data=json.dumps(data),
-        headers=headers
-    )
+@app.post("/custom-node-query")
+async def custom_node_query(request: QueryRequest, client: KitchenClient = Depends(get_kitchen_client)):
+    try:
+        resp = client.query(request.query, "custom-node-parsing")
+        return {"response": resp}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    print(f"Response: {result.text}")
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...), client: KitchenClient = Depends(get_kitchen_client)):
+    try:
+        contents = await file.read()
+        resp = client.upload_file(contents, file.filename, "embed-1")
+        return {"message": resp}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-if args.action == "store":
-    # Invoking a service
-    result = requests.post(
-        url='%s/store' % (base_url),
-        headers=headers
-    )
+@app.post("/multi-modal-upload")
+async def multi_modal_upload(file: UploadFile = File(...), client: KitchenClient = Depends(get_kitchen_client)):
+    try:
+        contents = await file.read()
+        resp = client.upload_file(contents, file.filename, "multi-modal-embed")
+        return {"message": resp}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    print(f"Response: {result.text}")
+@app.post("/custom-parse-upload")
+async def custom_parse_upload(file: UploadFile = File(...), client: KitchenClient = Depends(get_kitchen_client)):
+    try:
+        contents = await file.read()
+        resp = client.upload_file(contents, file.filename, "custom-parse-embed")
+        return {"message": resp}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

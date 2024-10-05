@@ -38,6 +38,9 @@ dev:
 s6:
 	docker compose -f docker/docker-compose.s6.yml $(cmd) 
 
+all-in-one: build-s6
+	docker compose -f docker/docker-compose.allinone.yml $(cmd) 
+
 build-s6:
 	docker build  -t s6 --no-cache -f docker/Dockerfile.s6 .
 

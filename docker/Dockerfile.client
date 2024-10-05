@@ -1,0 +1,12 @@
+FROM python:3.12-slim-bookworm AS python-base
+
+COPY ./client /app
+
+RUN cd /app && \
+    pip install -r requirements.txt
+
+WORKDIR /app
+
+ENTRYPOINT ["fastapi"]
+
+CMD ["run", "app.py"]
