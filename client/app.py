@@ -17,69 +17,29 @@ def get_kitchen_client():
     with KitchenClient(app_id="kitchenai", namespace="default") as client:
         yield client
 
-@app.post("/query")
+@app.post("/keyword")
 async def query(request: QueryRequest, client: KitchenClient = Depends(get_kitchen_client)):
     try:
-        resp = client.query(request.query, "query-1")
+        resp = client.query(request.query, "keyword-index-query")
         return {"response": resp}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/streaming-query")
-async def streaming_query(request: QueryRequest, client: KitchenClient = Depends(get_kitchen_client)):
-    try:
-        resp = client.query(request.query, "streaming")
-        return StreamingResponse(resp, media_type="text/event-stream")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/hybrid-search")
-async def hybrid_search(request: QueryRequest, client: KitchenClient = Depends(get_kitchen_client)):
-    try:
-        resp = client.query(request.query, "hybrid-search")
-        return {"results": resp}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/multi-modal-query")
-async def multi_modal_query(request: MultiModalQueryRequest, client: KitchenClient = Depends(get_kitchen_client)):
-    try:
-        resp = client.query({"query": request.query, "image_url": request.image_url}, "multi-modal-query")
-        return {"response": resp}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/custom-node-query")
+@app.post("/vector-index-query")
 async def custom_node_query(request: QueryRequest, client: KitchenClient = Depends(get_kitchen_client)):
     try:
-        resp = client.query(request.query, "custom-node-parsing")
+        resp = client.query(request.query, "vector-index-query")
         return {"response": resp}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/upload")
-async def upload_file(file: UploadFile = File(...), client: KitchenClient = Depends(get_kitchen_client)):
-    try:
-        contents = await file.read()
-        resp = client.upload_file(contents, file.filename, "embed-1")
-        return {"message": resp}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/multi-modal-upload")
+@app.post("/chromadb-embed")
 async def multi_modal_upload(file: UploadFile = File(...), client: KitchenClient = Depends(get_kitchen_client)):
     try:
         contents = await file.read()
-        resp = client.upload_file(contents, file.filename, "multi-modal-embed")
+        resp = client.upload_file(contents, file.filename, "chromadb-embed")
         return {"message": resp}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/custom-parse-upload")
-async def custom_parse_upload(file: UploadFile = File(...), client: KitchenClient = Depends(get_kitchen_client)):
-    try:
-        contents = await file.read()
-        resp = client.upload_file(contents, file.filename, "custom-parse-embed")
-        return {"message": resp}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
