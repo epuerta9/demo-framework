@@ -35,7 +35,7 @@ async def custom_node_query(request: QueryRequest, client: KitchenClient = Depen
 
 
 @app.post("/chromadb-embed")
-async def multi_modal_upload(file: UploadFile = File(...), client: KitchenClient = Depends(get_kitchen_client)):
+async def file_upload(file: UploadFile = File(...), client: KitchenClient = Depends(get_kitchen_client)):
     try:
         contents = await file.read()
         resp = client.upload_file(contents, file.filename, "chromadb-embed")

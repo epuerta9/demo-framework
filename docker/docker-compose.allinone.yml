@@ -1,12 +1,12 @@
 services:
 
   client:
-    build:
-      context: ../
-      dockerfile: docker/Dockerfile.client
+    image: kitchen-client
     ports:
       - 8001:8000
-
+    networks:
+      - hello-dapr
+      
   kitchenai:
     image: s6
     environment:
@@ -15,4 +15,7 @@ services:
       - 3501:3501
       - 3500:3500
       - 8000:8000
- 
+    networks:
+      - hello-dapr
+networks:
+  hello-dapr:
