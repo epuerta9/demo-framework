@@ -6,6 +6,8 @@ Simple demo to showcase AI framework abstraction using dapr
 
 # Quickstart 
 
+2 terminal windows required
+
 1. build the kitchenai side car 
   `make build-s6`
 
@@ -22,7 +24,7 @@ Simple demo to showcase AI framework abstraction using dapr
   `fastapi dev framework/app.py --host 0.0.0.0`
   This will spin up the fastapi on port :8000 which you can interact with directly 
 
-3. spin up the client application manually 
+3. **in another terminal window** spin up the client application manually 
 
   `cd client`
   `python -m venv venv`
